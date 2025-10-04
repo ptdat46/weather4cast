@@ -477,10 +477,21 @@ export default function Dashboard() {
 
             {/* Header */}
             <div className="relative z-10 container mx-auto px-4 py-8">
-                <div className="text-center mb-6">
-                    <h1 className="text-3xl md:text-4xl font-bold text-slate-800">Weather Dashboard</h1>
-                    <p className="text-slate-600">Realtime weather forecast app</p>
+                <div className="text-center mb-6 relative">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-800">Weather Dashboard</h1>
+                        <p className="text-slate-600">Realtime weather forecast app</p>
+                    </div>
+
+                    {/* Button với absolute positioning */}
+                    <button
+                        className="absolute top-0 right-0 px-5 py-3 rounded-xl text-white font-medium shadow-lg transition-all
+                bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700
+                flex flex-row items-center disabled:opacity-70">
+                        Đăng nhập/Đăng ký
+                    </button>
                 </div>
+
 
                 {/* Search Bar */}
                 <div className="rounded-2xl border border-white/40 bg-white/60 backdrop-blur-md shadow-xl p-4 md:p-5 mb-6 relative z-20">
@@ -543,13 +554,6 @@ export default function Dashboard() {
                                     <option value="m">Metric (°C)</option>
                                     <option value="f">Fahrenheit (°F)</option>
                                 </select>
-                                <div className="absolute -right-7 top-1/2 -translate-y-1/2 text-slate-600 hidden md:block">
-                                    {units === "f" ? (
-                                        <TbTemperatureFahrenheit className="text-xl" />
-                                    ) : (
-                                        <TbTemperatureCelsius className="text-xl" />
-                                    )}
-                                </div>
                             </div>
                         </div>
                     </div>
