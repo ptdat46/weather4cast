@@ -30,15 +30,14 @@ class DashboardController extends Controller
         try {
             $queries = $request->validated();
             $locationAndUnits = $queries['location'] . ' - ' . $queries['units'];
+            $query = Common::baseQuery($queries);
             if (Cache::has($locationAndUnits)) {
                 $result = Cache::get($locationAndUnits);
-                if ($result) {
-                    return Common::successResponse("Retrieve current data successfully", $result, 200);
-                }
+            } else {
+                $result = $this->dashboardService->getData($query);
+                Cache::put($locationAndUnits, $result, 3600);
             }
 
-            $query = Common::baseQuery($queries);
-            $result = $this->dashboardService->getData($query);
             if (!$result) {
                 return Common::errorResponse("Retrieve current data failed", [], 500);
             }
@@ -46,12 +45,11 @@ class DashboardController extends Controller
                 $lat = $result['location']['lat'];
                 $long = $result['location']['lon'];
                 $location = "{$lat}, {$long}";
-                $user = $request->user();
-                if ($user && empty($user->location)) {
+                $user = auth('sanctum')->user();
+                if ($user) {
                     $user->update(['location' => $location]);
                 }
             }
-            Cache::put($locationAndUnits, $result, 3600);
             return Common::successResponse("Retrieve current data successfully", $result, 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return Common::errorResponse(
