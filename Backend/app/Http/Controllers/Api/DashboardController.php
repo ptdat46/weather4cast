@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ForecastQueryRequest;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\QueryBaseDataRequest;
 use App\Helpers\Common;
 use App\Services\DashboardService;
+use Illuminate\Support\Facades\Cache;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -26,11 +29,29 @@ class DashboardController extends Controller
     {
         try {
             $queries = $request->validated();
+            $locationAndUnits = $queries['location'] . ' - ' . $queries['units'];
+            if (Cache::has($locationAndUnits)) {
+                $result = Cache::get($locationAndUnits);
+                if ($result) {
+                    return Common::successResponse("Retrieve current data successfully", $result, 200);
+                }
+            }
+
             $query = Common::baseQuery($queries);
             $result = $this->dashboardService->getData($query);
             if (!$result) {
                 return Common::errorResponse("Retrieve current data failed", [], 500);
             }
+            if ($queries['location'] == null) {
+                $lat = $result['location']['lat'];
+                $long = $result['location']['lon'];
+                $location = "{$lat}, {$long}";
+                $user = $request->user();
+                if (empty($user->location)) {
+                    $user->update(['location' => $location]);
+                }
+            }
+            Cache::put($locationAndUnits, $result, 3600);
             return Common::successResponse("Retrieve current data successfully", $result, 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return Common::errorResponse(
@@ -49,11 +70,20 @@ class DashboardController extends Controller
             $long = $queries["long"];
             $units = $queries["units"];
 
+            $latAndLongAndUnits = $lat . ' - ' . $long . ' - ' . $units;
+            if (Cache::has($latAndLongAndUnits)) {
+                $result = Cache::get($latAndLongAndUnits);
+                if ($result) {
+                    return Common::successResponse("Retrieve forecast data successfully", $result, 200);
+                }
+            }
+
             $query = Common::forecastQuery($lat, $long, $units);
             $result = $this->dashboardService->getData($query);
             if (!$result) {
                 return Common::errorResponse("Retrieve forecast data failed", [], 500);
             }
+            Cache::put($latAndLongAndUnits, $result, 3600);
             return Common::successResponse("Retrieve forecast data successfully", $result, 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return Common::errorResponse(

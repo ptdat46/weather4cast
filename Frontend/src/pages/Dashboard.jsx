@@ -4,6 +4,7 @@ import { FiSearch, FiLoader } from "react-icons/fi";
 import { TbTemperatureCelsius, TbTemperatureFahrenheit } from "react-icons/tb";
 import { IoSunnyOutline, IoCloudOutline, IoRainyOutline } from "react-icons/io5";
 import { api } from "../utils/api";
+import Cookies from 'js-cookie';
 
 export default function Dashboard() {
     // Đơn vị nhiệt độ ("m" = Celsius, "f" = Fahrenheit)
@@ -18,6 +19,9 @@ export default function Dashboard() {
     const [forecastData, setForecastData] = useState(null);
     // State để track lỗi
     const [error, setError] = useState(null);
+    const [isLogged, setIsLogged] = useState(false);
+    // Open logout menu
+    const [open, setOpen] = useState(false);
 
     // Trigger để reload current data
     const [currentDataTrigger, setCurrentDataTrigger] = useState({
@@ -28,6 +32,12 @@ export default function Dashboard() {
     // Fetch current data
     useEffect(() => {
         let cancelled = false;
+        if (Cookies.get('authToken') && Cookies.get('email')) {
+            setIsLogged(true);
+        } else {
+            setIsLogged(false);
+        };
+
 
         const fetchCurrentData = async () => {
             setIsSearching(true);
@@ -60,7 +70,6 @@ export default function Dashboard() {
                     toast.error(res.error || "Lỗi tải dữ liệu");
                     setError(res.error || "Không tìm thấy địa điểm");
 
-                    // SỬA: Nếu tìm kiếm lỗi, quay về trạng thái ban đầu
                     if (currentDataTrigger.location !== "") {
                         setLocationInput("");
                         setCurrentDataTrigger(prev => ({ ...prev, location: "" }));
@@ -90,7 +99,7 @@ export default function Dashboard() {
         return () => {
             cancelled = true;
         };
-    }, [currentDataTrigger]);
+    }, [currentDataTrigger, Cookies.get('authToeken'), Cookies.get('email')]);
 
     // Fetch forecast data khi có currentData
     useEffect(() => {
@@ -167,6 +176,22 @@ export default function Dashboard() {
             units: units
         });
     };
+
+    const handleLogout = () => {
+        const fetchLogout = async () => {
+            const res = await api.post("/logout");
+            if (res.success) {
+                Cookies.remove('authToken');
+                Cookies.remove('email');
+                setIsLogged(false);
+                toast.success('Đăng xuất thành công!');
+            } else {
+                toast.error(res.error || "Lỗi đăng xuất");
+            }
+        }
+        fetchLogout();
+        setOpen(false);
+    }
 
     //Suggestion search
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -483,12 +508,37 @@ export default function Dashboard() {
                         <p className="text-slate-600">Realtime weather forecast app</p>
                     </div>
 
-                    {/* Button với absolute positioning */}
+
                     <button
+                        onClick={() => setOpen(!open)}
                         className="absolute top-0 right-0 px-5 py-3 rounded-xl text-white font-medium shadow-lg transition-all
                 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700
                 flex flex-row items-center disabled:opacity-70">
-                        Đăng nhập/Đăng ký
+                        {isLogged ?
+                            <div className="relative">
+                                <span>{Cookies.get('email')}</span>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className={`h-5 w-5 transition-transform ${open ? "rotate-180" : "rotate-0"}`}
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                                {open && (
+                                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-xl"
+                                        >
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            :
+                            <a href="/login">Đăng nhập/Đăng ký</a>}
                     </button>
                 </div>
 
