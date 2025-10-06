@@ -47,7 +47,7 @@ class DashboardController extends Controller
                 $long = $result['location']['lon'];
                 $location = "{$lat}, {$long}";
                 $user = $request->user();
-                if (empty($user->location)) {
+                if ($user && empty($user->location)) {
                     $user->update(['location' => $location]);
                 }
             }
