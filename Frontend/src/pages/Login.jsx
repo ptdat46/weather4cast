@@ -131,7 +131,7 @@ const Login = () => {
                 <div className="p-6 pt-2">
                     <div className="text-center mb-6">
                         <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                            {isLogin ? 'Chào mừng trở lại!' : 'Tạo tài khoản mới'}
+                            {isLogin ? 'Chào mừng trở lại!' : 'Tạo tài khoản mới để nhận thông báo thời tiết hằng ngày'}
                         </h2>
                     </div>
 
